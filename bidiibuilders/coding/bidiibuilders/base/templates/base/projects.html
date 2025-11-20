@@ -1,0 +1,266 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bidii Builders - Project Management">
+    <title>Projects - Bidii Builders</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" role="navigation" aria-label="Main Navigation">
+        <div>
+            <div class="sidebar-header">
+                <h1>🏗️ Bidii Builders</h1>
+                <p>Construction Management</p>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 Dashboard</a>
+                <a href="{% url 'projects' %}" class="nav-item {% if request.resolver_match.url_name == 'projects' %}active{% endif %}">📋 Projects</a>
+                <a href="{% url 'workers' %}" class="nav-item {% if request.resolver_match.url_name == 'workers' %}active{% endif %}">👷 Workers</a>
+                <a href="{% url 'payments' %}" class="nav-item {% if request.resolver_match.url_name == 'payments' %}active{% endif %}">💰 Payments</a>
+                <a href="{% url 'schedule' %}" class="nav-item {% if request.resolver_match.url_name == 'schedule' %}active{% endif %}">📅 Schedule</a>
+                <a href="{% url 'support' %}" class="nav-item {% if request.resolver_match.url_name == 'support' %}active{% endif %}">🆘 Support</a>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navbar -->
+        <nav class="navbar">
+            <div><strong>Welcome to Projects 📋</strong></div>
+            <button class="logout-btn" onclick="confirmLogout()">Logout</button>
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container">
+            <!-- Messages -->
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" role="alert">
+                    <span>ℹ️</span>
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Header -->
+            <div class="header">
+                <h1>Projects</h1>
+                <button class="btn-primary" onclick="openProjectModal()">+ Add New Project</button>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Projects</h3>
+                    <div class="value">{{ total_projects }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active</h3>
+                    <div class="value">{{ active_projects }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Planning</h3>
+                    <div class="value">{{ planning_projects }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Completed</h3>
+                    <div class="value">{{ completed_projects }}</div>
+                </div>
+            </div>
+
+            <!-- Projects Table -->
+            <section class="section">
+                {% if projects %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Project Name</th>
+                            <th>Client</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Progress</th>
+                            <th>Budget</th>
+                            <th>Start Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in projects %}
+                        <tr>
+                            <td><strong>{{ project.name }}</strong></td>
+                            <td>{{ project.client_name }}</td>
+                            <td>{{ project.location }}</td>
+                            <td><span class="badge badge-{{ project.status }}">{{ project.get_status_display }}</span></td>
+                            <td>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <div class="progress-bar" style="flex: 1; min-width: 80px;">
+                                        <div class="progress-fill" style="width: {{ project.progress }}%"></div>
+                                    </div>
+                                    <span style="min-width: 35px; text-align: right;">{{ project.progress }}%</span>
+                                </div>
+                            </td>
+                            <td><strong>KES {{ project.budget|floatformat:0 }}</strong></td>
+                            <td>{{ project.start_date|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-edit" onclick="editProject({{ project.id }})">✏️</button>
+                                    <form method="POST" action="{% url 'delete_project' project.id %}" style="display:inline;" onsubmit="return confirm('Delete this project?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-delete">🗑️</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="no-data">
+                    <div style="font-size: 80px; margin-bottom: 20px;">📦</div>
+                    <h3>No projects yet</h3>
+                    <p>Click "Add New Project" to get started!</p>
+                </div>
+                {% endif %}
+            </section>
+        </div>
+    </div>
+
+    <!-- Project Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Project</h2>
+                <button type="button" class="close" onclick="closeProjectModal()" aria-label="Close">×</button>
+            </div>
+
+            <form method="POST" action="{% url 'projects' %}" novalidate>
+                {% csrf_token %}
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="project_name">Project Name *</label>
+                        <input type="text" id="project_name" name="name" required placeholder="Enter project name">
+                    </div>
+                    <div class="form-group">
+                        <label for="project_status">Status</label>
+                        <select id="project_status" name="status">
+                            <option value="planning">Planning</option>
+                            <option value="active">Active</option>
+                            <option value="on_hold">On Hold</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="project_location">Location</label>
+                        <input type="text" id="project_location" name="location" placeholder="Enter location">
+                    </div>
+                    <div class="form-group">
+                        <label for="project_budget">Budget (KES) *</label>
+                        <input type="number" id="project_budget" name="budget" step="0.01" required placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="project_client">Client Name</label>
+                        <input type="text" id="project_client" name="client_name" placeholder="Enter client name">
+                    </div>
+                    <div class="form-group">
+                        <label for="project_phone">Client Phone</label>
+                        <input type="tel" id="project_phone" name="client_phone" placeholder="Enter phone number">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="project_start">Start Date</label>
+                        <input type="date" id="project_start" name="start_date">
+                    </div>
+                    <div class="form-group">
+                        <label for="project_end">End Date</label>
+                        <input type="date" id="project_end" name="end_date">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="project_progress">Progress (%) - Default 0%</label>
+                    <input type="number" id="project_progress" name="progress" min="0" max="100" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="project_description">Description</label>
+                    <textarea id="project_description" name="description" placeholder="Enter project description"></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Create Project</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Open project modal
+         */
+        function openProjectModal() {
+            const modal = document.getElementById('projectModal');
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        /**
+         * Close project modal
+         */
+        function closeProjectModal() {
+            const modal = document.getElementById('projectModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        /**
+         * Edit project (placeholder)
+         */
+        function editProject(projectId) {
+            alert('Edit functionality for project ' + projectId);
+        }
+
+        /**
+         * Confirm logout
+         */
+        function confirmLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = "{% url 'logout' %}";
+            }
+        }
+
+        /**
+         * Close modal when clicking outside
+         */
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('projectModal');
+            if (e.target === modal) {
+                closeProjectModal();
+            }
+        });
+
+        /**
+         * Close modal with Escape key
+         */
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeProjectModal();
+            }
+        });
+    </script>
+</body>
+</html>

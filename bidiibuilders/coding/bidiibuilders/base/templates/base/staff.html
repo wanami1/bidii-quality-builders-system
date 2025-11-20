@@ -1,0 +1,331 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Portal - Bidii Builders</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+</head>
+<body>
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-header">
+                <h1>🏗️ Bidii</h1>
+                <p>Worker Portal</p>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" onclick="switchPage('clock-in')">⏱️ Clock In/Out</button>
+                <button class="nav-item" onclick="switchPage('available-work')">📋 Available Work</button>
+                <button class="nav-item" onclick="switchPage('my-work')">💼 My Work</button>
+                <button class="nav-item" onclick="switchPage('profile')">👤 My Profile</button>
+                <button class="nav-item" onclick="switchPage('workers')">👷 Other Workers</button>
+            </nav>
+        </div>
+
+        <div class="sidebar-footer">
+            <button onclick="logout()">🚪 Logout</button>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <nav class="navbar">
+            <div><strong>Worker Portal</strong></div>
+            <div class="navbar-right">
+                <span class="navbar-user">Welcome, <strong>{{ staff_name }}</strong> 👷</span>
+            </div>
+        </nav>
+
+        <div class="container">
+            <!-- CLOCK IN/OUT PAGE -->
+            <div id="clock-in" class="page active">
+                <div class="header">
+                    <h1>⏱️ Time Tracking</h1>
+                </div>
+
+                <div class="section">
+                    <div class="clock-in-section">
+                        <h2 style="color: #28a745; margin-bottom: 15px;">Clock In/Out</h2>
+                        <p style="color: #666; margin-bottom: 20px;">Current Time: <strong id="current-time">--:--:--</strong></p>
+                        <button class="clock-btn" onclick="clockIn()">🟢 Clock In</button>
+                        <button class="clock-btn out" onclick="clockOut()" style="margin-left: 10px;">🔴 Clock Out</button>
+                    </div>
+
+                    <h3 style="margin-top: 20px; margin-bottom: 15px; color: #333;">Today's Record</h3>
+                    <div id="time-logs"></div>
+                </div>
+            </div>
+
+            <!-- AVAILABLE WORK PAGE -->
+            <div id="available-work" class="page">
+                <div class="header">
+                    <h1>📋 Available Work</h1>
+                    <p style="color: #666; font-size: 14px;">New jobs posted by clients appear here automatically</p>
+                </div>
+
+                <div class="section">
+                    {% if available_jobs %}
+                        {% for job in available_jobs %}
+                        <div class="job-card">
+                            <div class="job-header">
+                                <div>
+                                    <div class="job-title">{{ job.name }}</div>
+                                    <div style="font-size: 12px; color: #999; margin-top: 5px;">Posted by: {{ job.user.get_full_name|default:job.user.username }}</div>
+                                </div>
+                                <span class="badge badge-available">🟢 Active</span>
+                            </div>
+                            <div class="job-meta">
+                                <span>📍 {{ job.location }}</span>
+                                <span>💰 KES {{ job.budget|floatformat:0 }}</span>
+                                <span>📅 {{ job.start_date|date:"M d, Y" }}</span>
+                                <span>⏳ Progress: {{ job.progress }}%</span>
+                            </div>
+                            <div class="job-description">{{ job.description|truncatewords:30 }}</div>
+                            <div style="margin-top: 15px;">
+                                <button class="btn-apply" onclick="applyForJob({{ job.id }})">✅ Apply for This Job</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="no-data">
+                        <p>📭 No available jobs at the moment</p>
+                        <p style="font-size: 12px; margin-top: 10px; color: #999;">Check back soon for new opportunities from clients!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- MY PROFILE PAGE -->
+            <div id="profile" class="page">
+                <div class="header">
+                    <h1>👤 My Profile</h1>
+                </div>
+
+                {% if worker_profile %}
+                <div class="section" style="background: #e8f5e9; border-left: 4px solid #28a745; margin-bottom: 20px;">
+                    <h3 style="color: #28a745; margin-bottom: 10px;">✅ Profile Active</h3>
+                    <p style="color: #666; font-size: 14px;"><strong>{{ worker_profile.name }}</strong> - {{ worker_profile.role|title }} | Daily Rate: KES {{ worker_profile.daily_rate|floatformat:0 }}</p>
+                </div>
+                {% endif %}
+
+                <div class="section">
+                    <h2>Personal Information</h2>
+                    <form method="POST" action="{% url 'staff_portal' %}" style="display: grid; gap: 15px;">
+                        {% csrf_token %}
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Full Name</label>
+                                <input type="text" name="full_name" value="{{ worker_profile.name|default:'' }}" placeholder="Enter your full name" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Phone Number</label>
+                                <input type="tel" name="phone" value="{{ worker_profile.phone|default:'' }}" placeholder="0712 345 678" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px;">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Primary Trade/Specialization</label>
+                            <select name="trade" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px;">
+                                <option value="">Select your trade</option>
+                                <option value="mason" {% if worker_profile.role == 'mason' %}selected{% endif %}>🧱 Mason</option>
+                                <option value="carpenter" {% if worker_profile.role == 'carpenter' %}selected{% endif %}>🪵 Carpenter</option>
+                                <option value="electrician" {% if worker_profile.role == 'electrician' %}selected{% endif %}>⚡ Electrician</option>
+                                <option value="plumber" {% if worker_profile.role == 'plumber' %}selected{% endif %}>🔧 Plumber</option>
+                                <option value="painter" {% if worker_profile.role == 'painter' %}selected{% endif %}>🎨 Painter</option>
+                                <option value="welder" {% if worker_profile.role == 'welder' %}selected{% endif %}>🔥 Welder</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Daily Rate (KES)</label>
+                            <input type="number" name="daily_rate" value="{{ worker_profile.daily_rate|default:'' }}" placeholder="1500" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px;">
+                        </div>
+
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Years of Experience</label>
+                            <input type="number" name="experience" value="{{ worker_profile.experience_years|default:'' }}" placeholder="5" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px;">
+                        </div>
+
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">✨ My Skills & Experience</label>
+                            <p style="font-size: 13px; color: #666; margin-bottom: 10px;">Check all that apply:</p>
+                            
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="skills" value="foundation" style="width: 18px; height: 18px;">
+                                    <span>Foundation Work</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="skills" value="framing" style="width: 18px; height: 18px;">
+                                    <span>Framing & Structure</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="skills" value="finishing" style="width: 18px; height: 18px;">
+                                    <span>Finishing & Details</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="skills" value="wiring" style="width: 18px; height: 18px;">
+                                    <span>Wiring & Installation</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="skills" value="plumbing" style="width: 18px; height: 18px;">
+                                    <span>Plumbing Work</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="skills" value="painting" style="width: 18px; height: 18px;">
+                                    <span>Painting & Decorating</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Bio / About You</label>
+                            <textarea name="bio" placeholder="Tell clients about yourself..." style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; min-height: 100px;">{{ worker_profile.bio|default:'' }}</textarea>
+                        </div>
+
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Availability Status</label>
+                            <select name="status" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px;">
+                                <option value="available" {% if worker_profile.status == 'available' %}selected{% endif %}>✅ Available</option>
+                                <option value="busy" {% if worker_profile.status == 'busy' %}selected{% endif %}>⏳ On Project</option>
+                                <option value="on_leave" {% if worker_profile.status == 'on_leave' %}selected{% endif %}>🏖️ On Leave</option>
+                                <option value="inactive" {% if worker_profile.status == 'inactive' %}selected{% endif %}>❌ Inactive</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" style="background: #28a745; color: white; padding: 12px 30px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.background='#218838'" onmouseout="this.style.background='#28a745'">💾 Save Profile</button>
+                    </form>
+                </div>
+
+                <div class="section" style="background: #e8f5e9; border-left: 4px solid #28a745;">
+                    <h3 style="color: #28a745; margin-bottom: 10px;">✅ Profile Visibility</h3>
+                    <p style="color: #666; font-size: 14px;">Your profile with skills and experience will be visible to clients on our platform. They can view available workers and contact you directly for projects!</p>
+                </div>
+            </div>
+
+            <!-- MY WORK PAGE -->
+            <div id="my-work" class="page">
+                <div class="header">
+                    <h1>💼 My Assigned Work</h1>
+                </div>
+
+                <div class="section">
+                    {% if my_assignments %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Location</th>
+                                <th>Start Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment in my_assignments %}
+                            <tr>
+                                <td><strong>{{ assignment.name }}</strong></td>
+                                <td>{{ assignment.location }}</td>
+                                <td>{{ assignment.start_date|date:"M d, Y" }}</td>
+                                <td><span class="badge badge-available">{{ assignment.status|title }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="no-data">
+                        <p>You have no assigned work yet. Check available jobs!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- OTHER WORKERS PAGE -->
+            <div id="workers" class="page">
+                <div class="header">
+                    <h1>👷 Other Workers by Trade</h1>
+                    <p style="color: #666; font-size: 14px;">Network with other builders on our platform</p>
+                </div>
+
+                <div class="section">
+                    {% if workers %}
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                        {% for worker in workers %}
+                        <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; background: white;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                                <div>
+                                    <h3 style="font-size: 18px; color: #333; margin-bottom: 5px;">{{ worker.name }}</h3>
+                                    <span class="badge badge-{{ worker.role }}" style="margin-bottom: 10px; display: inline-block; text-transform: capitalize;">{{ worker.role }}</span>
+                                </div>
+                            </div>
+                            
+                            <div style="border-top: 1px solid #e0e0e0; padding-top: 12px; margin-bottom: 12px;">
+                                <p style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                                    <strong>📞 Phone:</strong> {{ worker.phone|default:"N/A" }}
+                                </p>
+                                <p style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                                    <strong>💰 Daily Rate:</strong> KES {{ worker.daily_rate|floatformat:0 }}
+                                </p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="no-data">No other workers found</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchPage(pageId) {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = 
+                now.toLocaleTimeString('en-US', { hour12: false });
+        }
+
+        function clockIn() {
+            alert('✅ Clocked in at ' + new Date().toLocaleTimeString());
+            addTimeLog('Clocked In', new Date().toLocaleTimeString());
+        }
+
+        function clockOut() {
+            alert('✅ Clocked out at ' + new Date().toLocaleTimeString());
+            addTimeLog('Clocked Out', new Date().toLocaleTimeString());
+        }
+
+        function addTimeLog(action, time) {
+            const logsDiv = document.getElementById('time-logs');
+            const log = document.createElement('div');
+            log.className = 'time-log';
+            log.innerHTML = `<span>${action}</span><strong>${time}</strong>`;
+            logsDiv.appendChild(log);
+        }
+
+        function applyForJob(jobId) {
+            alert('✅ Application submitted! You will be notified if selected.');
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = "/logout/";
+            }
+        }
+
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bidii Builders - Project Team & Workers Management">
+    <title>Workers - Bidii Builders</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" role="navigation" aria-label="Main Navigation">
+        <div>
+            <div class="sidebar-header">
+                <h1>🏗️ Bidii Builders</h1>
+                <p>Construction Management</p>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="{% url 'dashboard' %}" class="nav-item">📊 Dashboard</a>
+                <a href="{% url 'projects' %}" class="nav-item">📋 Projects</a>
+                <a href="{% url 'workers' %}" class="nav-item active">👷 Workers</a>
+                <a href="{% url 'payments' %}" class="nav-item">💰 Payments</a>
+                <a href="{% url 'schedule' %}" class="nav-item">📅 Schedule</a>
+                <a href="{% url 'support' %}" class="nav-item">🆘 Support</a>
+            </nav>
+        </div>
+
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div><strong>Available Workers 👷</strong></div>
+            <button class="logout-btn" onclick="confirmLogout()">Logout</button>
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container">
+            <header class="header">
+                
+             <p>Browse our network of skilled workers by specialization. Contact directly to hire or discuss your project needs.</p>
+            </header>
+
+            <!-- Filter Section -->
+            <section class="filter-section">
+                <div class="filter-group">
+                    <label for="trade-filter">Filter by Trade:</label>
+                    <select id="trade-filter" onchange="filterWorkers('role', this.value)">
+                        <option value="">All Trades</option>
+                        <option value="mason">🧱 Mason</option>
+                        <option value="carpenter">🪵 Carpenter</option>
+                        <option value="electrician">⚡ Electrician</option>
+                        <option value="plumber">🔧 Plumber</option>
+                        <option value="painter">🎨 Painter</option>
+                        <option value="welder">🔥 Welder</option>
+                        <option value="laborer">👨‍💼 General Laborer</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="status-filter">Filter by Status:</label>
+                    <select id="status-filter" onchange="filterWorkers('status', this.value)">
+                        <option value="">All Status</option>
+                        <option value="available">✅ Available</option>
+                        <option value="busy">⏳ On Project</option>
+                        <option value="inactive">❌ Inactive</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Workers Grid -->
+            <div class="workers-grid">
+                {% if workers %}
+                    {% for worker in workers %}
+                    <article class="worker-card" data-role="{{ worker.role|lower }}" data-status="{{ worker.status|lower }}">
+                        <div class="worker-header">
+                            <div class="worker-avatar">{{ worker.name|first|upper }}</div>
+                            <div class="worker-info">
+                                <h3>{{ worker.name }}</h3>
+                                <p class="worker-trade">{{ worker.get_role_display }}</p>
+                                <div class="rating">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= worker.rating %}⭐{% else %}☆{% endif %}
+                                    {% endfor %}
+                                    ({{ worker.rating|floatformat:1 }}/5.0)
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="worker-details">
+                            <div class="detail-row">
+                                <span class="detail-label">📞 Phone:</span>
+                                <span class="detail-value">{{ worker.phone|default:"N/A" }}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">💰 Daily Rate:</span>
+                                <span class="detail-value">KES {{ worker.daily_rate|floatformat:0 }}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">⏳ Experience:</span>
+                                <span class="detail-value">{{ worker.experience_years|default:"0" }} years</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">✅ Status:</span>
+                                <span class="status-badge status-{{ worker.status|lower }}">
+                                    {% if worker.status == 'available' %}✅ Available
+                                    {% elif worker.status == 'busy' %}⏳ On Project
+                                    {% elif worker.status == 'on_leave' %}🏖️ On Leave
+                                    {% else %}❌ Inactive
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                        {% if worker.skills %}
+                        <div class="skills-section">
+                            <p>✨ Skills:</p>
+                            <div class="skill-tags">
+                                {% for skill in worker.skills %}
+                                    <span class="skill-tag">{{ skill }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if worker.bio %}
+                        <div class="bio-section">
+                            <p><strong>About:</strong> {{ worker.bio|truncatewords:20 }}</p>
+                        </div>
+                        {% endif %}
+
+                        <button class="contact-btn" onclick="contactWorker('{{ worker.name }}', '{{ worker.phone }}')">
+                            📞 Contact Worker
+                        </button>
+                    </article>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-data">
+                        <div class="icon">👷</div>
+                        <h3>No Workers Found</h3>
+                        <p>There are currently no workers available in our network.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Filter workers by role or status
+         */
+        function filterWorkers(type, value) {
+            const workers = document.querySelectorAll('.worker-card');
+            let visibleCount = 0;
+
+            workers.forEach(worker => {
+                const workerValue = worker.dataset[type];
+                if (!value || workerValue === value.toLowerCase()) {
+                    worker.style.display = '';
+                    visibleCount++;
+                } else {
+                    worker.style.display = 'none';
+                }
+            });
+
+            // Log if no results (optional)
+            if (visibleCount === 0) {
+                console.log('No workers match the filter');
+            }
+        }
+
+        /**
+         * Contact worker - show contact information
+         */
+        function contactWorker(name, phone) {
+            if (phone && phone !== 'N/A') {
+                alert(`Contact ${name} at ${phone}\n\nYou can also send them an email or call directly.`);
+            } else {
+                alert(`${name} doesn't have a phone number available.\n\nPlease ask your project manager for contact details.`);
+            }
+        }
+
+        /**
+         * Confirm logout
+         */
+        function confirmLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = "/logout/";
+            }
+        }
+    </script>
+</body>
+</html>

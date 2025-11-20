@@ -1,0 +1,180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payments – Bidii Builders</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" role="navigation" aria-label="Main Navigation">
+        <div>
+            <div class="sidebar-header">
+                <h1>🏗️ Bidii Builders</h1>
+                <p>Construction Management</p>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 Dashboard</a>
+                <a href="{% url 'projects' %}" class="nav-item {% if request.resolver_match.url_name == 'projects' %}active{% endif %}">📋 Projects</a>
+                <a href="{% url 'workers' %}" class="nav-item {% if request.resolver_match.url_name == 'workers' %}active{% endif %}">👷 Workers</a>
+                <a href="{% url 'payments' %}" class="nav-item {% if request.resolver_match.url_name == 'payments' %}active{% endif %}">💰 Payments</a>
+                <a href="{% url 'schedule' %}" class="nav-item {% if request.resolver_match.url_name == 'schedule' %}active{% endif %}">📅 Schedule</a>
+                <a href="{% url 'support' %}" class="nav-item {% if request.resolver_match.url_name == 'support' %}active{% endif %}">🆘 Support</a>
+            </nav>
+        </div>
+
+      
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div><strong>Bidii Builders Management System</strong></div>
+            <button class="logout-btn" onclick="confirmLogout()">Logout</button>
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container">
+            <div class="page-header">
+                <h1>💰 Payment Management</h1>
+                <p>Track and manage all financial transactions</p>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Received</h3>
+                    <div class="value">KES {{ total_received|default:"0"|floatformat:0 }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Pending Payments</h3>
+                    <div class="value">KES {{ total_pending|default:"0"|floatformat:0 }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Paid Out</h3>
+                    <div class="value">KES {{ total_paid|default:"0"|floatformat:0 }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>This Month</h3>
+                    <div class="value">KES {{ monthly_total|default:"0"|floatformat:0 }}</div>
+                </div>
+            </div>
+
+            <!-- Add Payment Form -->
+            <div class="add-form">
+                <h2>➕ Add New Payment</h2>
+                <form method="POST" action="{% url 'payments' %}">
+                    {% csrf_token %}
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="type">Payment Type</label>
+                            <select name="type" id="type" required>
+                                <option value="">Select Type</option>
+                                <option value="received">Received (Income)</option>
+                                <option value="paid">Paid (Expense)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <select name="category" id="category" required>
+                                <option value="">Select Category</option>
+                                <option value="client_payment">Client Payment</option>
+                                <option value="worker_wages">Worker Wages</option>
+                                <option value="materials">Materials</option>
+                                <option value="equipment">Equipment</option>
+                                <option value="transport">Transport</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="amount">Amount (KES)</label>
+                            <input type="number" name="amount" id="amount" step="0.01" required placeholder="Enter amount">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="date">Date</label>
+                            <input type="date" name="date" id="date" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea name="description" id="description" required placeholder="Enter payment details"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select name="status" id="status" required>
+                            <option value="completed">Completed</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="submit-btn">💾 Save Payment</button>
+                </form>
+            </div>
+
+            <!-- Payments Table -->
+            <div class="payments-section">
+                <h2>Payment Records</h2>
+                {% if payments %}
+                    <table class="payments-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.date|date:"M d, Y" }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ payment.type }}">
+                                        {{ payment.get_type_display }}
+                                    </span>
+                                </td>
+                                <td style="font-weight:600;">
+                                    {% if payment.type == 'received' %}+{% else %}-{% endif %}
+                                    KES {{ payment.amount|floatformat:0 }}
+                                </td>
+                                <td>{{ payment.description|truncatewords:10 }}</td>
+                                <td>
+                                    <form method="POST" action="{% url 'delete_payment' payment.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="delete-btn" onclick="return confirm('Delete this payment?')">🗑️</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="empty-state">
+                        <h3>🔭 No Payments Recorded</h3>
+                        <p>Add your first payment using the form above</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        function confirmLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = "{% url 'logout' %}";
+            }
+        }
+    </script>
+</body>
+</html>

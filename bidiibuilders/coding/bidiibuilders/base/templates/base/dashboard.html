@@ -1,0 +1,169 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bidii Builders - Construction Management Dashboard">
+    <title>Dashboard - Bidii Builders</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" role="navigation" aria-label="Main Navigation">
+        <div>
+            <div class="sidebar-header">
+                <h1>🏗️ Bidii Builders</h1>
+                <p>Construction Management</p>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="{% url 'dashboard' %}" class="nav-item active">📊 Dashboard</a>
+                <a href="{% url 'projects' %}" class="nav-item">📋 Projects</a>
+                <a href="{% url 'workers' %}" class="nav-item">👷 Workers</a>
+                <a href="{% url 'payments' %}" class="nav-item">💰 Payments</a>
+                <a href="{% url 'schedule' %}" class="nav-item">📅 Schedule</a>
+                <a href="{% url 'support' %}" class="nav-item">🆘 Support</a>
+            </nav>
+        </div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div>
+                <strong>Bidii Builders Management System</strong>
+            </div>
+            <div class="navbar-right">
+                <span class="navbar-user">
+                    Welcome, <strong>{{ user.username }}</strong> 👋
+                </span>
+                <button class="logout-btn" onclick="confirmLogout()">Logout</button>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container">
+            <!-- Welcome Section -->
+            <div class="welcome">
+                <h1>Dashboard</h1>
+                <p>Here's what's happening with your construction projects today.</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Projects</h3>
+                    <div class="value">{{ projects_count|default:"0" }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Projects</h3>
+                    <div class="value">{{ active_projects|default:"0" }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Workers</h3>
+                    <div class="value">{{ total_workers|default:"0" }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Budget</h3>
+                    <div class="value">KES {{ total_budget|floatformat:0|default:"0" }}</div>
+                </div>
+            </div>
+
+            <!-- Recent Projects Section -->
+            <section class="section">
+                <h2>Recent Projects</h2>
+                {% if recent_projects %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Project Name</th>
+                            <th>Client</th>
+                            <th>Status</th>
+                            <th>Progress</th>
+                            <th>Budget</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in recent_projects %}
+                        <tr>
+                            <td><strong>{{ project.name }}</strong></td>
+                            <td>{{ project.client_name }}</td>
+                            <td>
+                                <span class="badge badge-{{ project.status }}">
+                                    {{ project.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ project.progress }}%</td>
+                            <td>KES {{ project.budget|floatformat:0 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="no-data">No projects yet.</div>
+                {% endif %}
+            </section>
+
+            <!-- Upcoming Tasks Section -->
+            <section class="section">
+                <h2>Upcoming Tasks</h2>
+                {% if upcoming_tasks %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Date</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in upcoming_tasks %}
+                        <tr>
+                            <td><strong>{{ task.title }}</strong></td>
+                            <td>{{ task.date }}</td>
+                            <td>{{ task.description }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="no-data">No upcoming tasks scheduled.</div>
+                {% endif %}
+            </section>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Confirm logout action
+         */
+        function confirmLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = "/logout/";
+            }
+        }
+
+        /**
+         * Sidebar toggle for mobile
+         */
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        /**
+         * Close sidebar when clicking outside
+         */
+        document.addEventListener('click', (e) => {
+            const sidebar = document.querySelector('.sidebar');
+            const toggleBtn = document.querySelector('.toggle-sidebar');
+            if (!sidebar.contains(e.target) && !toggleBtn?.contains(e.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
+    </script>
+</body>
+</html>

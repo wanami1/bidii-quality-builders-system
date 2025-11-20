@@ -1,0 +1,218 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support - Bidii Builders</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" role="navigation" aria-label="Main Navigation">
+        <div>
+            <div class="sidebar-header">
+                <h1>🏗️ Bidii Builders</h1>
+                <p>Construction Management</p>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 Dashboard</a>
+                <a href="{% url 'projects' %}" class="nav-item {% if request.resolver_match.url_name == 'projects' %}active{% endif %}">📋 Projects</a>
+                <a href="{% url 'workers' %}" class="nav-item {% if request.resolver_match.url_name == 'workers' %}active{% endif %}">👷 Workers</a>
+                <a href="{% url 'payments' %}" class="nav-item {% if request.resolver_match.url_name == 'payments' %}active{% endif %}">💰 Payments</a>
+                <a href="{% url 'schedule' %}" class="nav-item {% if request.resolver_match.url_name == 'schedule' %}active{% endif %}">📅 Schedule</a>
+                <a href="{% url 'support' %}" class="nav-item {% if request.resolver_match.url_name == 'support' %}active{% endif %}">🆘 Support</a>
+            </nav>
+        </div>
+
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div>Help & Support 💬</div>
+            <button class="logout-btn" onclick="confirmLogout()">Logout</button>
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container">
+            <div class="header">
+                <h1>Support & Help Center</h1>
+                <p>We're here to help! Find answers or contact your project manager.</p>
+            </div>
+
+            <div class="quick-contact">
+                <h2>📞 Need Quick Help?</h2>
+                <div class="contact-methods">
+                    <div class="contact-method">
+                        <h4>Call Your Project Manager</h4>
+                        <p>+254 (0) 708 123 456</p>
+                    </div>
+                    <div class="contact-method">
+                        <h4>WhatsApp</h4>
+                        <p><a href="https://wa.me/254708123456">Open WhatsApp</a></p>
+                    </div>
+                    <div class="contact-method">
+                        <h4>Email Support</h4>
+                        <p><a href="mailto:support@bidii.com">support@bidii.com</a></p>
+                    </div>
+                    <div class="contact-method">
+                        <h4>Live Chat</h4>
+                        <p><a href="#" onclick="alert('Chat widget opening...')">Start Chat</a></p>
+                    </div>
+                </div>
+                <div class="emergency-note">
+                    <strong>🚨 Emergency?</strong> Call directly: +254 (0) 708 999 999 for urgent site issues
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="faq-section">
+                    <h2>❓ Common Questions</h2>
+                    
+                    {% comment %} Repeatable FAQ items {% endcomment %}
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>How do I track my project progress?</span>
+                            <span class="faq-toggle">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            You can view your project progress in real-time from the Dashboard. Weekly progress photos and milestone updates are provided.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>How are payments structured?</span>
+                            <span class="faq-toggle">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            Payments are structured in milestones (e.g., 30% upfront, 40% mid-project, 30% on completion). Check your invoices for details.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>Can I request changes during the project?</span>
+                            <span class="faq-toggle">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            Yes, contact your project manager with details. Major changes may affect timeline and cost.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>What if there's a quality issue?</span>
+                            <span class="faq-toggle">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            Contact your project manager immediately with photos. Issues are addressed within 24-48 hours.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>When will my project be completed?</span>
+                            <span class="faq-toggle">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            Timeline is shown in Dashboard. Updates will be provided for any changes.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>How do I communicate with my project team?</span>
+                            <span class="faq-toggle">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            Use the Workers page for direct contact. For formal communication, email your project manager.
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="sidebar-section">
+                        <h3>📚 Resources</h3>
+                        <a href="#" class="link-item">📖 Project Guide</a>
+                        <a href="#" class="link-item">🎥 Video Tutorials</a>
+                        <a href="#" class="link-item">📋 Invoice Guide</a>
+                        <a href="#" class="link-item">✅ Handover Checklist</a>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h3>📞 Contact Your PM</h3>
+                        <div class="pm-contact-card">
+                            <p style="font-weight:600; color:#333; margin-bottom:5px;">John Kipchoge</p>
+                            <p style="color:#666; font-size:13px; margin-bottom:8px;">Project Manager</p>
+                            <p style="font-size:12px; color:#667eea;">📧 john.kipchoge@bidii.com</p>
+                            <p style="font-size:12px; color:#667eea;">📱 +254 712 345 678</p>
+                            <span class="status-badge">🟢 Online</span>
+                        </div>
+                        <button class="btn-primary" style="font-size:13px; padding:10px;">Message PM</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ticket-form">
+                <h2>📝 Submit a Request</h2>
+                <p style="color:#666; margin-bottom:20px; font-size:14px;">Have a specific issue or request? Fill out the form below and we'll get back to you within 24 hours.</p>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                        <div class="form-group">
+                            <label>Issue Type *</label>
+                            <select name="issue_type" required>
+                                <option value="">Select type</option>
+                                <option value="quality">Quality Concern</option>
+                                <option value="timeline">Timeline Question</option>
+                                <option value="payment">Payment/Invoice</option>
+                                <option value="change">Change Request</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Priority *</label>
+                            <select name="priority" required>
+                                <option value="">Select priority</option>
+                                <option value="low">Low - Not urgent</option>
+                                <option value="medium">Medium - Within 2 days</option>
+                                <option value="high">High - Urgent</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Subject *</label>
+                        <input type="text" name="subject" required placeholder="Briefly describe your issue">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Details *</label>
+                        <textarea name="message" required placeholder="Provide detailed information. Include photos if relevant."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Submit Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleFaq(element) {
+            const faqItem = element.closest('.faq-item');
+            faqItem.classList.toggle('open');
+        }
+
+        function confirmLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = "{% url 'logout' %}";
+            }
+        }
+    </script>
+</body>
+</html>
